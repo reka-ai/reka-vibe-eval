@@ -8,7 +8,7 @@ A benchmark for evaluating multimodal chat models, including especially challeng
 
 ## Dataset
 
-The dataset including all images can be downloaded [in the Releases page of this repo](https://github.com/reka-ai/reka-vibe-eval/releases/tag/vibe-eval.v1).
+The dataset including all images can be downloaded [in the Releases page of this repo](https://github.com/reka-ai/reka-vibe-eval/releases/tag/v1.0.0).
 
 The dataset is stored as a JSONL file: [data/vibe-eval.v1.jsonl](data/vibe-eval.v1.jsonl).
 Each example has the following fields:
