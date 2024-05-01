@@ -4,7 +4,7 @@
 
 A benchmark for evaluating multimodal chat models, including especially challenging examples.
 
-[[Link to paper]](https://reka.ai/s/reka_vibe_eval_paper.pdf)
+[[Link to paper]](https://publications.reka.ai/reka-vibe-eval.pdf)
 
 ![Example from the dataset](figure.png)
 
