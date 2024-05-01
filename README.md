@@ -16,7 +16,7 @@ The dataset is stored as a JSONL file: [data/vibe-eval.v1.jsonl](data/vibe-eval.
 Each example has the following fields:
 
 - **example_id**: a unique ID for the example
-- **category**: the category that this example belongs to, either `difficulty-normal` or `difficult-hard`
+- **category**: the category that this example belongs to, either `difficulty-normal` or `difficulty-hard`
 - **prompt**: the user prompt
 - **reference**: a golden reference answer for the prompt
 - **media_filename**: the name of the file in the dataset
