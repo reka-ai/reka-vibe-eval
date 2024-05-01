@@ -4,6 +4,8 @@
 
 A benchmark for evaluating multimodal chat models, including especially challenging examples.
 
+[[Link to paper]](https://reka.ai/s/reka_vibe_eval_paper.pdf)
+
 ![Example from the dataset](figure.png)
 
 ## Dataset
@@ -54,4 +56,5 @@ Vibe-Eval Score (%)
 
 † Note we expect the results of Reka Core to be worse on the hard-set, as these are, by their very definition, prompts that Core cannot solve.
 
+## Citation
 
