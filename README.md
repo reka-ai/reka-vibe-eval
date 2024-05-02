@@ -40,19 +40,19 @@ This will output detailed results to `out.jsonl` and will also print a table of 
 Vibe-Eval Score (%)
 | Model           | all         | hard       | normal     |
 |-----------------|---------------------|--------|--------|
-| Gemini Pro 1.5  | 60.40               | 53.00  | 64.80  |
-| GPT-4V          | 57.90               | 46.00  | 64.90  |
-| Reka Core       | 53.70               | 38.20† | 62.80  |
-| Claude Opus     | 52.80               | 41.80  | 59.20  |
-| Reka Flash      | 52.20               | 39.20  | 59.90  |
-| Claude Sonnet   | 52.10               | 39.70  | 59.50  |
-| Claude Haiku    | 49.80               | 38.50  | 56.40  |
-| Llava-1.6-34b   | 48.60               | 39.90  | 53.70  |
-| Reka Edge       | 45.40               | 32.20  | 53.10  |
-| Llava-1.6-7b    | 43.70               | 35.30  | 48.60  |
-| Idefics-2-8b    | 40.00               | 32.20  | 44.60  |
-| Idefics-1-80b   | 36.00               | 32.10  | 38.30  |
-| Fuyu-8b         | 30.80               | 23.40  | 35.20  |
+| Gemini Pro 1.5  | 60.4               | 53.0  | 64.8  |
+| GPT-4V          | 57.9               | 46.0  | 64.9  |
+| Reka Core       | 53.7               | 38.2† | 62.8  |
+| Claude Opus     | 52.8               | 41.8  | 59.2  |
+| Reka Flash      | 52.2               | 39.2  | 59.9  |
+| Claude Sonnet   | 52.1               | 39.7  | 59.5  |
+| Claude Haiku    | 49.8               | 38.5  | 56.4  |
+| Llava-1.6-34b   | 48.6               | 39.9  | 53.7  |
+| Reka Edge       | 45.4               | 32.2  | 53.1  |
+| Llava-1.6-7b    | 43.7               | 35.3  | 48.6  |
+| Idefics-2-8b    | 40.0               | 32.2  | 44.6  |
+| Idefics-1-80b   | 36.0               | 32.1  | 38.3  |
+| Fuyu-8b         | 30.8               | 23.4  | 35.2  |
 
 † Note we expect the results of Reka Core to be worse on the hard-set, as these are, by their very definition, prompts that Core cannot solve.
 
