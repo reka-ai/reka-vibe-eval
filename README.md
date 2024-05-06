@@ -58,3 +58,11 @@ Vibe-Eval Score (%)
 
 ## Citation
 
+```bibtex
+@article{padlewski2024vibeeval,
+  title={Vibe-Eval: A hard evaluation suite for measuring progress of multimodal language models},
+  author={Piotr Padlewski and Max Bain and Matthew Henderson and Zhongkai Zhu and Nishant Relan and Hai Pham and Donovan Ong and Kaloyan Aleksiev and Aitor Ormazabal and Samuel Phua and Ethan Yeo and Eugenie Lamprecht and Qi Liu and Yuqi Wang and Eric Chen and Deyu Fu and Lei Li and Che Zheng and Cyprien de Masson d'Autume and Dani Yogatama and Mikel Artetxe and Yi Tay},
+  journal={arXiv preprint arXiv:2405.02287},
+  year={2024}
+}
+```
