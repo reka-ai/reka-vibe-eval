@@ -40,6 +40,7 @@ This will output detailed results to `out.jsonl` and will also print a table of 
 Vibe-Eval Score (%)
 | Model           | all         | hard       | normal     |
 |-----------------|---------------------|--------|--------|
+| GPT-4o          | 63.1               | 54.1  | 68.1  |
 | Gemini Pro 1.5  | 60.4               | 53.0  | 64.8  |
 | GPT-4V          | 57.9               | 46.0  | 64.9  |
 | Reka Core       | 53.7               | 38.2† | 62.8  |
