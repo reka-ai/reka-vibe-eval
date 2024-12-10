@@ -1,3 +1,4 @@
-reka-api>=1.0.6,<2.0.0
+reka-api==3.2.0
 requests>=2.0.0
 tqdm>=4.0.0
+python-dotenv

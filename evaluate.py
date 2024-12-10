@@ -19,15 +19,17 @@ import time
 from argparse import ArgumentParser
 from collections import defaultdict
 from dataclasses import asdict, dataclass
+from dotenv import load_dotenv
 from enum import Enum
 from pathlib import Path
 from typing import List, Optional
 
-import reka
+from reka.client import Reka
 import requests
 import tqdm
 
 _REPO_DIR = Path(__file__).parent
+CLIENT = None
 
 
 def _parse_args():
@@ -41,7 +43,7 @@ def _parse_args():
     parser.add_argument(
         "--evaluator",
         type=str,
-        default=Evaluator.REKA_CORE_TEXT.value,
+        default=Evaluator.REKA_CORE.value,
         choices=[e.value for e in Evaluator],
         help="The evaluator to use.",
     )
@@ -79,10 +81,7 @@ def _parse_args():
 
 class Evaluator(Enum):
     # Use Reka Core (including image input).
-    REKA_CORE = "reka-core"
-
-    # Use Reka Core, only using text input.
-    REKA_CORE_TEXT = "reka-core-text"
+    REKA_CORE = "reka-core-20240501"
 
 
 @dataclass
@@ -138,7 +137,9 @@ Rating: (int)"""
 
 
 def make_evaluator_prompt(example: Example, include_image: bool) -> str:
-    return (_PROMPT_WITH_IMAGE if include_image else _PROMPT_WITH_NO_IMAGE).format(
+    return (
+        _PROMPT_WITH_IMAGE if include_image else _PROMPT_WITH_NO_IMAGE
+    ).format(
         prompt=example.prompt,
         reference=example.reference,
         generation=example.generation,
@@ -147,16 +148,29 @@ def make_evaluator_prompt(example: Example, include_image: bool) -> str:
 
 def evaluate(example: Example, evaluator: Evaluator) -> Example:
     """Evaluates the generation and populates the score and explanation fields."""
-    include_image = evaluator == Evaluator.REKA_CORE
-    evaluator_prompt = make_evaluator_prompt(example, include_image=include_image)
-    evaluator_response = reka.chat(
-        human=evaluator_prompt,
-        media_url=example.media_url if include_image else None,
+    include_image = False
+    evaluator_prompt = make_evaluator_prompt(
+        example, include_image=include_image
+    )
+
+    if include_image:
+        raise NotImplementedError(
+            f"Currently only supporting text-based evaluator"
+        )
+
+    evaluator_response = CLIENT.chat.create(
+        model=evaluator.value,
+        messages=[
+            {
+                "content": evaluator_prompt,
+                "role": "user",
+            }
+        ],
         temperature=0.4,
-        model_name="reka-core-20240415",
-        request_output_len=1024,
-    )["text"]
+    )
+    evaluator_response = evaluator_response.responses[0].message.content
     re_match = re.search(r"Rating:\s*([1-5])", evaluator_response)
+
     if re_match is None:
         raise ValueError(
             f"Evaluator generation did not contain Rating: ([1-5]): {evaluator_response}"
@@ -199,9 +213,12 @@ def evaluate_in_parallel_with_retries(
         raise latest_error
 
     out = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=parallelism) as executor:
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=parallelism
+    ) as executor:
         futures = {
-            executor.submit(_evaluate_with_retry, example) for example in examples
+            executor.submit(_evaluate_with_retry, example)
+            for example in examples
         }
         for future in tqdm.tqdm(
             concurrent.futures.as_completed(futures), total=len(examples)
@@ -295,6 +312,9 @@ def _summarise_metrics(examples: List[Example]) -> None:
 
 if __name__ == "__main__":
     args = _parse_args()
+
+    load_dotenv()
+    CLIENT = Reka(api_key=os.environ["REKA_API_KEY"])
     if args.output.exists():
         print(
             f"❗️ Warning: --output {args.output} already exists. Will overwrite.",
