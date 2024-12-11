@@ -22,6 +22,28 @@ Each example has the following fields:
 - **media_filename**: the name of the file in the dataset
 - **media_url**: a URL where the file is hosted publicly
 
+## Leaderboard 🏆
+
+Vibe-Eval Score (%)
+
+| Model               | all    | hard  | normal|
+|---------------------|--------|-------|-------|
+| Gemini Flash 2.0    | 67.1   | 52.3  | 75.9  |
+| Claude 3.5 Sonnet   | 66.0   | 54.0  | 73.1  |
+| GPT-4o              | 64.7   | 52.3  | 72.0  |
+| Gemini-1.5 Pro      | 63.8   | 52.3  | 70.6  |
+| GPT-4o-mini         | 56.7   | 44.7  | 63.8  |
+| Reka Flash          | 56.0   | 39.3† | 65.8  |
+| Pixtral Large       | 55.1   | 43.0  | 62.3  |
+| Grok Vision Beta    | 54.2   | 37.1  | 64.2  |
+| Gemini 1.5 Flash 8b | 54.1   | 44.8  | 59.6  |
+| Claude Opus         | 52.8   | 41.8  | 59.2  |
+| Pixtral 12b         | 52.5   | 39.3  | 60.4  |
+| Claude Haiku        | 48.5   | 31.6  | 58.2  |
+
+
+† Note we expect the results of Reka models to be worse on the hard-set, as these are, by their very definition, prompts that Core cannot solve.
+
 ## Running the evaluation
 
 To run the evaluation, use [evaluate.py](evaluate.py) as follows:
@@ -36,26 +58,21 @@ The `generations.jsonl` is expected to contain model generations. It should be a
 
 This will output detailed results to `out.jsonl` and will also print a table of final results to stdout.
 
-## Leaderboard 🏆
-Vibe-Eval Score (%)
-| Model           | all         | hard       | normal     |
-|-----------------|---------------------|--------|--------|
-| GPT-4o          | 63.1               | 54.1  | 68.1  |
-| Gemini Pro 1.5  | 60.4               | 53.0  | 64.8  |
-| GPT-4V          | 57.9               | 46.0  | 64.9  |
-| Reka Core       | 53.7               | 38.2† | 62.8  |
-| Claude Opus     | 52.8               | 41.8  | 59.2  |
-| Reka Flash      | 52.2               | 39.2  | 59.9  |
-| Claude Sonnet   | 52.1               | 39.7  | 59.5  |
-| Claude Haiku    | 49.8               | 38.5  | 56.4  |
-| Llava-1.6-34b   | 48.6               | 39.9  | 53.7  |
-| Reka Edge       | 45.4               | 32.2  | 53.1  |
-| Llava-1.6-7b    | 43.7               | 35.3  | 48.6  |
-| Idefics-2-8b    | 40.0               | 32.2  | 44.6  |
-| Idefics-1-80b   | 36.0               | 32.1  | 38.3  |
-| Fuyu-8b         | 30.8               | 23.4  | 35.2  |
+## Running the generations
 
-† Note we expect the results of Reka Core to be worse on the hard-set, as these are, by their very definition, prompts that Core cannot solve.
+We provide example script to generate responses for Claude, Gemini, OpenAI, Reka, xAI and Pixtral models. Just run e.g. `python models/reka_models.py` make sure you have necessary requirements installed and API keys set, written at the top of each script. These will save the generations to a `.jsonl`. in `data/generations` folder.
+
+Set API keys manually or in a `.env` file:
+
+```bash
+REKA_API_KEY=your_api_key
+OPENAI_API_KEY=your_api_key
+GEMINI_API_KEY=your_api_key
+ANTHROPIC_API_KEY=your_api_key
+XAI_API_KEY=your_api_key
+```
+
+**Note, some image sizes exceeed anthropic's API limit of 5MB, therefore we upload these to chat manually and add them to the generations jsonl
 
 ## Citation
 
