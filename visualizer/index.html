@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Vibe Eval Visualizer</title>
+<style>
+  body {
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    margin: 0;
+    background: #f5f5f5;
+    color: #333;
+  }
+
+  header {
+    background: #333;
+    color: #fff;
+    padding: 20px;
+    text-align: center;
+  }
+
+  header h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: normal;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 30px auto;
+    padding: 0 20px;
+  }
+
+  .file-inputs {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .file-inputs label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: bold;
+  }
+
+  .file-inputs input[type="file"] {
+    margin: 5px 0 15px 0;
+  }
+
+  .file-inputs button {
+    background: #333;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+
+  .file-inputs button:hover {
+    background: #444;
+  }
+
+  .nav-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin: 20px 0;
+    align-items: center;
+  }
+
+  .nav-buttons select {
+    padding: 5px;
+  }
+
+  .nav-buttons button {
+    background: #333;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+
+  .nav-buttons button:hover {
+    background: #444;
+  }
+
+  .example-container {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 20px;
+  }
+
+  .header-section {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    position: relative;
+  }
+
+  .header-section img {
+    max-width: 300px;
+    margin-right: 20px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    transition: transform 0.3s ease;
+    transform-origin: center;
+    cursor: zoom-in;
+  }
+
+  .header-section img:hover {
+    transform: scale(2.5);
+    z-index: 999;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+  }
+
+  .header-section p {
+    margin: 5px 0;
+  }
+
+  .header-section strong {
+    font-weight: 600;
+  }
+
+  h2 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+  }
+
+  .prompt, .reference {
+    margin-bottom: 20px;
+  }
+
+  .model-outputs {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  .model-column {
+    flex: 1;
+    border: 1px solid #eee;
+    border-radius: 5px;
+    padding: 10px;
+    background: #fafafa;
+    position: relative;
+  }
+
+  .model-column h3 {
+    margin-top: 0;
+    font-size: 1rem;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+
+  .rating-section {
+    margin-top: 10px;
+    font-weight: bold;
+  }
+
+  .model-output-text {
+    margin-top: 10px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    padding: 10px;
+    white-space: pre-wrap;
+  }
+
+  .full-response {
+    display: none;
+    margin-top: 10px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    padding: 10px;
+    white-space: pre-wrap;
+    overflow: auto;
+    max-height: 300px;
+  }
+
+  .show-full-toggle {
+    color: #0066cc;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: inline-block;
+    margin-top: 5px;
+  }
+
+  .meta-info p {
+    margin: 3px 0;
+  }
+
+  .index-info {
+    font-style: italic;
+    color: #666;
+    margin-top: 10px;
+  }
+</style>
+
+<!-- Load marked.js before main script -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+
+<header>
+  <h1>Vibe-Eval Visualizer</h1>
+</header>
+
+<div class="container">
+  <div class="file-inputs">
+    <label>Original JSONL (with prompt & reference): <input type="file" id="original-file"></label>
+    <label>Model A JSONL: <input type="file" id="model-a-file"></label>
+    <label>Model B JSONL: <input type="file" id="model-b-file"></label>
+    <button id="load-data">Load Data</button>
+  </div>
+
+  <div class="nav-buttons" style="display:none;">
+    <button id="prev-btn">Previous</button>
+    <select id="example-select"></select>
+    <button id="next-btn">Next</button>
+  </div>
+
+  <div id="example-container" class="example-container" style="display:none;"></div>
+</div>
+
+<script>
+  let currentIndex = 0;
+  let mergedData = [];
+
+  // Utility function to read a file as text
+  function readFileAsText(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = event => resolve(event.target.result);
+      reader.onerror = error => reject(error);
+      reader.readAsText(file);
+    });
+  }
+
+  // Parse JSONL content into an object keyed by example_id
+  function parseJSONL(text, filename) {
+    const lines = text.trim().split('\n');
+    const result = {};
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      try {
+        const obj = JSON.parse(line);
+        if (!obj.example_id) {
+          throw new Error(`Missing example_id on line ${i+1}`);
+        }
+        result[obj.example_id] = obj;
+      } catch (e) {
+        throw new Error(`Error parsing JSON in file ${filename} at line ${i+1}: ${e.message}`);
+      }
+    }
+    return result;
+  }
+
+  // Extract rating:
+  function getRating(modelObj) {
+    if (modelObj && typeof modelObj.score === 'number') {
+      return modelObj.score;
+    }
+
+    if (modelObj && typeof modelObj.evaluator_explanation === 'string') {
+      const re = /Rating:\s*([1-5])/;
+      const match = modelObj.evaluator_explanation.match(re);
+      if (match) {
+        return parseInt(match[1], 10);
+      }
+    }
+    return "N/A";
+  }
+
+  document.getElementById('load-data').addEventListener('click', async () => {
+    const originalFile = document.getElementById('original-file').files[0];
+    const modelAFile = document.getElementById('model-a-file').files[0];
+    const modelBFile = document.getElementById('model-b-file').files[0];
+
+    if (!originalFile || !modelAFile || !modelBFile) {
+      alert('Please select all three files.');
+      return;
+    }
+
+    try {
+      const [originalText, modelAText, modelBText] = await Promise.all([
+        readFileAsText(originalFile),
+        readFileAsText(modelAFile),
+        readFileAsText(modelBFile)
+      ]);
+
+      const originalData = parseJSONL(originalText, originalFile.name);
+      const modelAData = parseJSONL(modelAText, modelAFile.name);
+      const modelBData = parseJSONL(modelBText, modelBFile.name);
+
+      // Merge data
+      mergedData = [];
+      for (const ex_id in originalData) {
+        const ex_data = originalData[ex_id];
+
+        const modelAObj = modelAData[ex_id] || {};
+        const modelBObj = modelBData[ex_id] || {};
+
+        const modelA_gen = modelAObj.generation || 'No output';
+        const modelB_gen = modelBObj.generation || 'No output';
+
+        const model_a_rating = getRating(modelAObj);
+        const model_b_rating = getRating(modelBObj);
+
+        const model_a_eval = modelAObj.evaluator_explanation || '';
+        const model_b_eval = modelBObj.evaluator_explanation || '';
+
+        const combined = {
+          example_id: ex_id,
+          category: ex_data.category || '',
+          prompt: ex_data.prompt || '',
+          reference: ex_data.reference || '',
+          media_url: ex_data.media_url || '',
+          model_a_generation: modelA_gen,
+          model_a_rating,
+          model_a_evaluator_explanation: model_a_eval,
+          model_b_generation: modelB_gen,
+          model_b_rating,
+          model_b_evaluator_explanation: model_b_eval
+        };
+        mergedData.push(combined);
+      }
+
+      // Sort by example_id for consistency (optional)
+      mergedData.sort((a, b) => (a.example_id > b.example_id) ? 1 : -1);
+
+      // Populate dropdown
+      const select = document.getElementById('example-select');
+      select.innerHTML = '';
+      mergedData.forEach((ex, idx) => {
+        const option = document.createElement('option');
+        option.value = idx;
+        option.textContent = ex.example_id;
+        select.appendChild(option);
+      });
+
+      // Show UI elements
+      if (mergedData.length > 0) {
+        document.querySelector('.nav-buttons').style.display = 'flex';
+        document.getElementById('example-container').style.display = 'block';
+        currentIndex = 0;
+        renderExample(currentIndex);
+      } else {
+        alert('No examples found in the provided files.');
+      }
+
+    } catch (e) {
+      console.error(e);
+      alert(`Error reading or parsing files: ${e.message}`);
+    }
+  });
+
+  function renderExample(index) {
+    const container = document.getElementById('example-container');
+    const example = mergedData[index];
+
+    // Update dropdown
+    const select = document.getElementById('example-select');
+    select.value = index;
+
+    container.innerHTML = '';
+
+    // Header: Image + metadata
+    const header = document.createElement('div');
+    header.className = 'header-section';
+
+    const img = document.createElement('img');
+    img.src = example.media_url || '';
+    img.alt = 'Example Image';
+
+    const meta = document.createElement('div');
+    meta.className = 'meta-info';
+    meta.innerHTML = `
+      <p><strong>Example ID:</strong> ${example.example_id}</p>
+      <p><strong>Category:</strong> ${example.category}</p>
+      <p class="index-info">Index: ${index+1}/${mergedData.length}</p>
+    `;
+
+    header.appendChild(img);
+    header.appendChild(meta);
+
+    // Prompt
+    const promptEl = document.createElement('div');
+    promptEl.className = 'prompt';
+    promptEl.innerHTML = `<h2>Prompt</h2>${marked.parse(example.prompt)}`;
+
+    // Reference
+    const refEl = document.createElement('div');
+    refEl.className = 'reference';
+    refEl.innerHTML = `<h2>Reference</h2>${marked.parse(example.reference)}`;
+
+    // Model outputs
+    const outputsContainer = document.createElement('div');
+    outputsContainer.className = 'model-outputs';
+
+    // Model A
+    const modelACol = document.createElement('div');
+    modelACol.className = 'model-column';
+
+    let modelAExtraLink = '';
+    if (example.model_a_evaluator_explanation.trim() !== '') {
+      modelAExtraLink = `<span class="show-full-toggle" data-target="model-a-full">Show Evaluator Explanation</span>`;
+    }
+
+    modelACol.innerHTML = `
+      <h3>Model A Output</h3>
+      <div class="rating-section">Rating: ${example.model_a_rating}</div>
+      ${modelAExtraLink}
+      <div class="model-output-text">${marked.parse(example.model_a_generation)}</div>
+      <div class="full-response" id="model-a-full">${marked.parse(example.model_a_evaluator_explanation)}</div>
+    `;
+
+    // Model B
+    const modelBCol = document.createElement('div');
+    modelBCol.className = 'model-column';
+
+    let modelBExtraLink = '';
+    if (example.model_b_evaluator_explanation.trim() !== '') {
+      modelBExtraLink = `<span class="show-full-toggle" data-target="model-b-full">Show Evaluator Explanation</span>`;
+    }
+
+    modelBCol.innerHTML = `
+      <h3>Model B Output</h3>
+      <div class="rating-section">Rating: ${example.model_b_rating}</div>
+      ${modelBExtraLink}
+      <div class="model-output-text">${marked.parse(example.model_b_generation)}</div>
+      <div class="full-response" id="model-b-full">${marked.parse(example.model_b_evaluator_explanation)}</div>
+    `;
+
+    outputsContainer.appendChild(modelACol);
+    outputsContainer.appendChild(modelBCol);
+
+    container.appendChild(header);
+    container.appendChild(promptEl);
+    container.appendChild(refEl);
+    container.appendChild(outputsContainer);
+
+    // Add event listeners to toggle full evaluator explanation
+    container.querySelectorAll('.show-full-toggle').forEach(toggle => {
+      toggle.addEventListener('click', () => {
+        const targetId = toggle.getAttribute('data-target');
+        const fullEl = document.getElementById(targetId);
+        if (fullEl.style.display === 'block') {
+          fullEl.style.display = 'none';
+          toggle.textContent = 'Show Evaluator Explanation';
+        } else {
+          fullEl.style.display = 'block';
+          toggle.textContent = 'Hide Evaluator Explanation';
+        }
+      });
+    });
+  }
+
+  document.getElementById('prev-btn').addEventListener('click', () => {
+    if (currentIndex > 0) {
+      currentIndex--;
+      renderExample(currentIndex);
+    }
+  });
+
+  document.getElementById('next-btn').addEventListener('click', () => {
+    if (currentIndex < mergedData.length - 1) {
+      currentIndex++;
+      renderExample(currentIndex);
+    }
+  });
+
+  document.getElementById('example-select').addEventListener('change', (e) => {
+    const idx = parseInt(e.target.value, 10);
+    if (!isNaN(idx) && idx >= 0 && idx < mergedData.length) {
+      currentIndex = idx;
+      renderExample(currentIndex);
+    }
+  });
+</script>
+</body>
+</html>

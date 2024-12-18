@@ -9,71 +9,63 @@ $ vllm serve mistralai/Pixtral-Large-Instruct-2411 --config-format mistral --loa
 
 """
 
-from tqdm import tqdm
 import requests
 import json
-from huggingface_hub import hf_hub_download
+from typing import Dict, Any
 from datetime import datetime, timedelta
+from huggingface_hub import hf_hub_download
+from .base_model import BaseVisionModel
 
-MODEL_NAME = "mistralai/Pixtral-Large-Instruct-2411"
-SERVER_URL = "127.0.0.1"  # localhost
-SERVER_PORT = "8000"
-
-url = f"http://{SERVER_URL}:{SERVER_PORT}/v1/chat/completions"
-headers = {"Content-Type": "application/json", "Authorization": "Bearer token"}
-
-
-def load_system_prompt(repo_id: str, filename: str) -> str:
-    file_path = hf_hub_download(repo_id=repo_id, filename=filename)
-    with open(file_path, "r") as file:
-        system_prompt = file.read()
-    today = datetime.today().strftime("%Y-%m-%d")
-    yesterday = (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d")
-    model_name = repo_id.split("/")[-1]
-    return system_prompt.format(
-        name=model_name, today=today, yesterday=yesterday
-    )
-
-
-SYSTEM_PROMPT = load_system_prompt(MODEL_NAME, "SYSTEM_PROMPT.txt")
-
-with open("data/vibe-eval.v1.jsonl", "r") as fid:
-    data = fid.readlines()
-
-data = [json.loads(x) for x in data]
-generations = []
-for example in tqdm(data):
-    example_id = example["example_id"]
-    category = example["category"]
-    media_url = example["media_url"]
-    prompt = example["prompt"]
-
-    messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {
-            "role": "user",
-            "content": [
-                {"type": "text", "text": prompt},
-                {"type": "image_url", "image_url": {"url": media_url}},
-            ],
-        },
-    ]
-    payload = {"model": MODEL_NAME, "messages": messages}
-    try:
-        response = requests.post(
-            url, headers=headers, data=json.dumps(payload)
-        )
-        gen = {
-            "example_id": example_id,
-            "generation": response.json()["choices"][0]["message"]["content"],
+class PixtralServer(BaseVisionModel):
+    """Pixtral server implementation."""
+    
+    def __init__(
+        self, 
+        model_name: str, 
+        server_url: str = "127.0.0.1",
+        server_port: str = "8000"
+    ):
+        super().__init__(model_name)
+        self.url = f"http://{server_url}:{server_port}/v1/chat/completions"
+        self.headers = {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer token"
         }
-        generations.append(json.dumps(gen))
-    except Exception as e:
-        print(f"failed generation for {example_id}, error: {e}")
+        self.system_prompt = self.load_system_prompt()
 
-with open(
-    f"data/generations/{MODEL_NAME.lower().replace('/', '-')}.jsonl", "w"
-) as fid:
-    for gen in generations:
-        fid.write(gen)
-        fid.write("\n")
+    def load_system_prompt(self) -> str:
+        """Load system prompt from model files."""
+        file_path = hf_hub_download(repo_id=self.model_name, filename="SYSTEM_PROMPT.txt")
+        with open(file_path, "r") as file:
+            system_prompt = file.read()
+        today = datetime.today().strftime("%Y-%m-%d")
+        yesterday = (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d")
+        model_name = self.model_name.split("/")[-1]
+        return system_prompt.format(
+            name=model_name, today=today, yesterday=yesterday
+        )
+
+    def generate_response(self, example: Dict[str, Any]) -> str:
+        """Generate a response using Pixtral server.
+        
+        Args:
+            example: Dictionary containing media_url and prompt
+            
+        Returns:
+            str: Generated response from Pixtral server
+        """
+        messages = [
+            {"role": "system", "content": self.system_prompt},
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": example["prompt"]},
+                    {"type": "image_url", "image_url": {"url": example["media_url"]}},
+                ],
+            },
+        ]
+        payload = {"model": self.model_name, "messages": messages}
+        response = requests.post(
+            self.url, headers=self.headers, data=json.dumps(payload)
+        )
+        return response.json()["choices"][0]["message"]["content"]
