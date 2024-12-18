@@ -60,9 +60,9 @@ This will output detailed results to `out.jsonl` and will also print a table of 
 
 ## Running the generations
 
-We provide example script to generate responses for Claude, Gemini, OpenAI, Reka, xAI and Pixtral models. Just run e.g. `python models/reka_models.py` make sure you have necessary requirements installed and API keys set, written at the top of each script. These will save the generations to a `.jsonl`. in `data/generations` folder.
+We provide model generation script that covers the following models: Claude, Gemini, OpenAI, Reka, xAI and Pixtral models. Just run e.g. `python models/generate.py --model MODEL_NAME`. Make sure you have necessary requirements for that model installed and API keys set, written at the top of each script model definition script. These will save the generations to a `.jsonl`. in `data/generations` folder.
 
-Set API keys manually or in a `.env` file:
+Set API keys via cli flag `--api_key API_KEY`, bash variables, or manually in a `.env` file:
 
 ```bash
 REKA_API_KEY=your_api_key
@@ -73,6 +73,11 @@ XAI_API_KEY=your_api_key
 ```
 
 **Note, some image sizes exceeed anthropic's API limit of 5MB, therefore we upload these to chat manually and add them to the generations jsonl
+
+## Visualizing the benchmark and generations
+
+To visualize the benchmark and generations just open `visualizer/index.html` locally in your browser. Upload the benchmark and results files from the evaulate.py:
+![Visualizer](visualizer.jpeg)
 
 ## Citation
 
