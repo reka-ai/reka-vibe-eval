@@ -1,5 +1,5 @@
 """
-$ pip install openai # we use openai sdk for simplicty
+$ pip install openai # xai lets you use openai sdk for simplicity
 """
 import os
 from typing import Dict, Any
